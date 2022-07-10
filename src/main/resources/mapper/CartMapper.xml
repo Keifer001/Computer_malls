@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.test01.mapper.CartMapper">
+    <resultMap id="CartEntityMap" type="com.example.test01.entity.Cart">
+        <id column="cid" property="cid"></id>
+        <result column="created_user" property="createdUser"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="modified_user" property="modifiedUser"/>
+        <result column="modified_time" property="modifiedTime"/>
+    </resultMap>
+    <insert id="insert" useGeneratedKeys="true" keyProperty="cid">
+        INSERT INTO t_cart (uid, pid, price, num, created_user, created_time, modified_user, modified_time)
+        VALUES (#{uid}, #{pid}, #{price}, #{num}, #{createdUser}, #{createdTime}, #{modifiedUser}, #{modifiedTime})
+    </insert>
+    <update id="updateNumByCid">
+        UPDATE t_cart SET num=#{num},modified_time=#{modifiedTime},modified_user=#{modifiedUser} WHERE cid=#{cid}
+    </update>
+    <select id="findByUidAndPid" resultMap="CartEntityMap">
+        SELECT * FROM t_cart WHERE uid=#{uid} AND pid=#{pid}
+    </select>
+    <select id="findVOByUid" resultType="com.example.test01.vo.CartVO">
+        SELECT cid, p.image, p.title, c.price, c.num, p.price as realPrice
+        FROM t_product p JOIN t_cart c on p.id=c.pid
+        WHERE c.uid=#{uid} order by c.created_time DESC
+    </select>
+    <select id="findByCid" resultMap="CartEntityMap">
+        SELECT *FROM t_cart WHERE cid=#{cid}
+    </select>
+    <select id="findVOByCids" resultType="com.example.test01.vo.CartVO">
+        SELECT pid,uid,cid, p.image, p.title, c.price, c.num, p.price as realPrice
+        FROM t_product p JOIN t_cart c on p.id=c.pid
+        /*当点击结算页面的时候提交的是一个cid的集合所以要用in来接收 ， mybatis提供了一个foreach的标签*/
+        WHERE c.cid IN (
+                    /*需要循环的变量的类型   接收变量   拿到每个值中间用特殊符号来拼接*/
+            <foreach collection="array" item="cid" separator=",">
+            #{cid}
+            </foreach>
+            )
+        order by c.created_time DESC
+    </select>
+</mapper>

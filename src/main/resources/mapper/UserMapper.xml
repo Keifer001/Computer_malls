@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.test01.mapper.UserMapper">
+    <resultMap id="UserEntityMap" type="com.example.test01.entity.User">
+        <result column="is_delete" property="isDelete"></result>
+        <result column="created_user" property="createdUser"></result>
+        <result column="created_time" property="createdTime"></result>
+        <result column="modified_user" property="modifiedUser"></result>
+        <result column="modified_time" property="modifiedTime"></result>
+    </resultMap>
+    <!--对应插入用户数据的接口Integer insert（User user）  插入需要使用useGeneratedKeys开启用户主键的自增keyProperty-->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="uid">
+        INSERT INTO t_user (username, password, salt, phone, email, gender, avatar,
+                            is_delete, created_user, created_time, modified_user, modified_time)
+        VALUES
+            (#{username}, #{password}, #{salt}, #{phone}, #{email}, #{gender}, #{avatar}, #{isDelete},
+             #{createdUser}, #{createdTime}, #{modifiedUser}, #{modifiedTime})
+    </insert>
+    <!--对应映射层的findByUsername接口-->
+    <select id="findByUsername" resultMap="UserEntityMap">
+        SELECT *FROM t_user WHERE username=#{username}
+    </select>
+    <update id="updatePasswordByUid">
+        UPDATE t_user SET
+            password=#{password},
+            modified_time=#{modifiedTime},
+            modified_user=#{modifiedUser}
+        where uid=#{uid}
+    </update>
+    <!--查询要注意的是没办法在当前sql语句匹配对应字段，若数据库和实体类字段匹配的上用resulttype，反之用自定义的resultMap-->
+    <!--查询当前用户的数据是否存在，再进行相关的操作-->
+    <select id="findByUid" resultMap="UserEntityMap">
+        SELECT * FROM t_user WHERE uid=#{uid}
+    </select>
+    <update id="updateInfoByUid">
+    UPDATE t_user SET
+        /*在下列数据不为空的情况下进行更新,if表示的是判断条件标签,test接收的是一个返回值为boolean类型的条件，test为true则执行if内部语句*/
+        <if test="phone!=null">phone=#{phone},</if>
+        <if test="email!=null"> email=#{email},</if>
+        <if test="gender!=null">gender=#{gender},</if>
+        modified_user=#{modifiedUser},
+        modified_time=#{modifiedTime}
+        WHERE uid=#{uid}
+    </update>
+    <update id="updateAvatarByUid">
+        UPDATE t_user SET modified_user=#{modifiedUser},
+                          modified_time=#{modifiedTime},
+                          avatar=#{avatar}
+        WHERE uid=#{uid}
+    </update>
+</mapper>
